@@ -15,6 +15,8 @@ directory = __file__
 def __initialize(item, path, action="a+"):
     if(path == "notes"):
         path = notesDir
+    if("/" in path and not path.endswith("/")):
+        path += "/"
     if not os.path.exists(path):
         os.makedirs(path)
     if not os.path.exists(path + item):
