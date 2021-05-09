@@ -5,16 +5,19 @@
 from pathlib import Path
 import os, datetime
 
-secureDir = "/home/pi/SecureData-Data/"
+# Change this line to modify where your data is stored
+securePath = "/home/pi/SecureData-Data/"
 
-# don't modify notesDir here- modify by changing {secureDir}/NotesDir
-notesDir = "/home/pi/Dropbox/Notes"
+# don't modify these lines directly! These are just defaults. See ReadMe.md in https://github.com/tylerjwoodfin/RaspberryPi-Tasks
+piTasksNotesPath = "/home/pi/Dropbox/Notes"
+piTasksCloudProvider = "Dropbox:"
+piTasksCloudProviderPath = "Notes"
 directory = __file__
 
 # prepares files for other functions
 def __initialize(item, path, action="a+"):
     if(path == "notes"):
-        path = notesDir
+        path = piTasksNotesPath
     if("/" in path and not path.endswith("/")):
         path += "/"
     if not os.path.exists(path):
@@ -24,13 +27,13 @@ def __initialize(item, path, action="a+"):
         f.write('')
         f.close()
 
-    if(path == notesDir):
+    if(path == piTasksNotesPath):
         # pull from Dropbox
-        os.system("rclone copyto Dropbox:Notes/{} {}".format(item, path + item))
+        os.system(f"rclone copyto {piTasksCloudProvider}{piTasksCloudProviderPath}/{item} {path + item}")
     return open(path + item, action)
 
 # reads the first line of a file
-def variable(item, path=secureDir):
+def variable(item, path=securePath):
     f = __initialize(item, path)
     f.seek(0,0)
     try:
@@ -39,35 +42,41 @@ def variable(item, path=secureDir):
         return ''
 
 # override default notes directory
-notesDir = variable("NotesDir") if len(variable("NotesDir")) > 0 else notesDir
-if(notesDir[-1] != "/"):
-    notesDir += "/"
+piTasksNotesPath = variable("PiTasksNotesPath") if len(variable("PiTasksNotesPath")) > 0 else piTasksNotesPath
+if(piTasksNotesPath[-1] != "/"):
+    piTasksNotesPath += "/"
+
+piTasksCloudProvider = variable("PiTasksCloudProvider") if len(variable("PiTasksCloudProvider")) > 0 else piTasksCloudProvider
+if(piTasksCloudProvider[-1] != ":"):
+    piTasksCloudProvider += ":"
+
+piTasksCloudProviderPath = variable("PiTasksCloudProviderPath") if len(variable("PiTasksCloudProviderPath")) > 0 else piTasksCloudProviderPath
 
 # returns the file as an array
-def array(item, path=secureDir):
+def array(item, path=securePath):
     f = __initialize(item, path)
     f.seek(0,0)
     return f.read().rstrip().splitlines()
 
 # returns the file as a string without splitting
-def file(item, path=secureDir):
+def file(item, path=securePath):
     f = __initialize(item, path)
     f.seek(0,0)
     return f.read().rstrip()
 
 # writes a file, replacing the contents entirely
-def write(item, content, path=secureDir):
+def write(item, content, path=securePath):
     f = __initialize(item, path, "w")
     f.write(content)
     f.close()
 
     # Push to Dropbox
-    if(path == notesDir or path == "notes"):
-        path = notesDir
-        os.system("rclone copyto {} Dropbox:Notes/{}".format(path + item, item))
+    if(path == piTasksNotesPath or path == "notes"):
+        path = piTasksNotesPath
+        os.system(f"rclone copyto {path + item} {piTasksCloudProvider}{piTasksCloudProviderPath}/{item}")
 
 # appends a file where duplicate lines in 'content' will be removed
-def appendUnique(item, content, path=secureDir):
+def appendUnique(item, content, path=securePath):
     content = file(item, path) + '\n' + content
     if(content[0] == '\n'):
         content = content[1:]
