@@ -3,13 +3,17 @@
 # Dependencies: rclone
 
 from pathlib import Path
-import os, datetime
+import os
+import datetime
+import pwd
+
+userDir = pwd.getpwuid( os.getuid() )[ 0 ]
 
 # Change this line to modify where your data is stored
-securePath = "/home/pi/SecureData-Data/"
+securePath = f"/home/{userDir}/SecureData-Data/"
 
 # don't modify these lines directly! These are just defaults. See ReadMe.md in https://github.com/tylerjwoodfin/RaspberryPi-Tasks
-piTasksNotesPath = "/home/pi/Dropbox/Notes"
+piTasksNotesPath = f"/home/{userDir}/Dropbox/Notes"
 piTasksCloudProvider = "Dropbox:"
 piTasksCloudProviderPath = "Notes"
 directory = __file__
