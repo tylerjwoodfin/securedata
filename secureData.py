@@ -87,4 +87,5 @@ def appendUnique(item, content, path=securePath):
 
 # appends to a daily Log file, sent and reset at the end of each day
 def log(content):
+    print(f"{datetime.datetime.now().strftime('%H:%M:%S')}: {content}")
     appendUnique("dailyLog", f"{datetime.datetime.now().strftime('%H:%M:%S')}: {content}")
