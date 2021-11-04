@@ -43,6 +43,7 @@ def variable(item, path=securePath):
     try:
         return f.read().rstrip().splitlines()[0]
     except:
+        log(f"Error: {item} not found in {path}")
         return ''
 
 # override default notes directory
@@ -60,7 +61,11 @@ piTasksCloudProviderPath = variable("PiTasksCloudProviderPath") if len(variable(
 def array(item, path=securePath):
     f = __initialize(item, path)
     f.seek(0,0)
-    return f.read().rstrip().splitlines()
+    array = f.read().rstrip().splitlines()
+    if(not array):
+        log(f"Error: {item} not found in {path}")
+
+    return array
 
 # returns the file as a string without splitting
 def file(item, path=securePath):
@@ -79,7 +84,7 @@ def write(item, content, path=securePath):
         path = piTasksNotesPath
         os.system(f"rclone copyto {path + item} {piTasksCloudProvider}{piTasksCloudProviderPath}/{item}")
 
-# appends a file where duplicate lines in 'content' will be removed
+# appends to a file where duplicate lines in 'content' will be removed
 def appendUnique(item, content, path=securePath):
     content = file(item, path) + '\n' + content
     if(content[0] == '\n'):
@@ -90,6 +95,10 @@ def appendUnique(item, content, path=securePath):
     write(item, content, path)
 
 # appends to a daily Log file, sent and reset at the end of each day
-def log(content):
+def log(content="", logName="LOG_DAILY", clear=False):
     print(f"{datetime.datetime.now().strftime('%H:%M:%S')}: {content}")
-    appendUnique("dailyLog", f"{datetime.datetime.now().strftime('%H:%M:%S')}: {content}")
+    appendUnique(logName, f"{datetime.datetime.now().strftime('%H:%M:%S')}: {content}")
+
+    if(clear):
+        print(f"Clearing {logName}")
+        write("dailyLog", "")
