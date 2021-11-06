@@ -101,4 +101,4 @@ def log(content="", logName="LOG_DAILY", clear=False):
 
     if(clear):
         print(f"Clearing {logName}")
-        write("dailyLog", "")
+        write(logName, "")
