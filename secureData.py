@@ -10,7 +10,7 @@ import pwd
 userDir = pwd.getpwuid( os.getuid() )[ 0 ]
 
 # Change this line to modify where your data is stored
-securePath = f"/home/{userDir}/SecureData-Data/"
+securePath = f"/home/{userDir}/SecureData/"
 
 # don't modify these lines directly! These are just defaults. See ReadMe.md in https://github.com/tylerjwoodfin/RaspberryPi-Tasks
 piTasksNotesPath = f"/home/{userDir}/Dropbox/Notes"
