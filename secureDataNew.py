@@ -27,6 +27,8 @@ def main():
         'path_log', securePath + '/log', fileName='settings.json')
     if not os.path.exists(logPath):
         os.makedirs(logPath)
+    if not logPath.endswith("/"):
+        logPath += '/'
  
 def getItem(*attribute):
     """
@@ -79,6 +81,22 @@ def setItem(*attribute, value=None, fileName='settings.json'):
         json.dump(_settings, file, indent=4)
 
     return value
+
+def getFileAsArray(item, filePath=""):
+    """
+    Returns the file as an array
+    """
+
+    global logPath
+    if(filePath == ""):
+        filePath = logPath
+
+    try:
+        content = open(filePath + item, "r").read()
+        return content.split('\n')
+    except Exception as e:
+        print(e)
+        log(f"Error for getFileAsArray: {item} not found in {filePath}")
 
 def writeFile(fileName, filePath="", content="", append=False):
     """
