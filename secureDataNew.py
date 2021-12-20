@@ -97,6 +97,7 @@ def getFileAsArray(item, filePath=""):
     except Exception as e:
         print(e)
         log(f"Error for getFileAsArray: {item} not found in {filePath}")
+        return ""
 
 def writeFile(fileName, filePath="", content="", append=False):
     """
@@ -122,7 +123,7 @@ def log(content="", logName="LOG_DAILY", clear=False, filePath=""):
     if(filePath == ""):
         filePath = logPath
 
-    logName = logPath + "/" + logName
+    logName = logPath + logName
 
     if not os.path.exists(filePath):
         os.makedirs(filePath)
