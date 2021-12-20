@@ -6,7 +6,6 @@ import pathlib
 def main():
     global securePath
     global settings
-    global data
     global logPath
 
     thisDirectory = pathlib.Path(__file__).parent.resolve()
@@ -18,14 +17,7 @@ def main():
         _settingsFile.write('{}')
     _settingsFile.close()
 
-    # initialize data file if it doesn't exist
-    _dataFile = open('data.json', 'r+')
-    if(len(_dataFile.read()) == 0):
-        _dataFile.write('{}')
-    _dataFile.close()
-
     settings = json.load(open('settings.json'))
-    data = json.load(open('data.json'))
 
     # Determines where data is stored, like `securePath = "/home/raspberry/data"`
     securePath = getItem('path_secureData') or setItem(
@@ -54,24 +46,24 @@ def getItem(*attribute):
 
     return _settings
 
-def setItem(*attribute, value=None, fileName='data.json'):
+def setItem(*attribute, value=None, fileName='settings.json'):
     """
-    Sets a property in data.json (or some other `fileName`).
+    Sets a property in settings.json (or some other `fileName`).
     Usage: set('person', 'name', 'Tyler')
     The last argument is the value to set, unless value is specified.
     Returns the value set.
     """
 
-    global data
+    global settings
 
     if(not value):
         value = attribute[-1]
 
-    _data = data if fileName == 'data.json' else json.load(open(fileName))
+    _settings = settings if fileName == 'settings.json' else json.load(open(fileName))
 
     # iterate through entire JSON object and replace 2nd to last attribute with value
 
-    partition = _data
+    partition = _settings
     for index, item in enumerate(attribute[:-1]):
         if item not in partition:
             partition[item] = value if index == len(attribute) - 2 else {}
@@ -84,18 +76,11 @@ def setItem(*attribute, value=None, fileName='data.json'):
                 partition = partition[item]
 
     with open(fileName, 'w+') as file:
-        json.dump(_data, file, indent=4)
+        json.dump(_settings, file, indent=4)
 
     return value
 
-def readFile(file):
-    """
-    Reads a file (creating it if it doesn't exist) and returns its contents
-    """
-    with open(file, 'r+') as file:
-        return file.read()
-
-def writeFile(fileName, filePath="", content=""):
+def writeFile(fileName, filePath="", content="", append=False):
     """
     Writes a file to the specified path and creates subfolders if necessary
     """
@@ -107,7 +92,7 @@ def writeFile(fileName, filePath="", content=""):
     if not os.path.exists(filePath):
         os.makedirs(filePath)
 
-    with open(filePath + "/" + fileName, 'w+') as file:
+    with open(filePath + "/" + fileName, 'w+' if not append else 'a+') as file:
         file.write(content)
 
 def log(content="", logName="LOG_DAILY", clear=False, filePath=""):
@@ -118,6 +103,11 @@ def log(content="", logName="LOG_DAILY", clear=False, filePath=""):
     global logPath
     if(filePath == ""):
         filePath = logPath
+
+    logName = logPath + "/" + logName
+
+    if not os.path.exists(filePath):
+        os.makedirs(filePath)
 
     if(clear):
         print(f"Clearing {logName}")
@@ -131,7 +121,15 @@ def log(content="", logName="LOG_DAILY", clear=False, filePath=""):
 
     print(content)
 
-    writeFile(fileName=logName, filePath=filePath, content=content)
+    # create file if it doesn't exist
+    logFile = pathlib.Path(logName)
+    logFile.touch(exist_ok=True)
+
+    with open(logName, 'a+') as file:
+        if(os.path.getsize(logName) > 0 and str(file)[-1] != '\n'):
+            content = '\n' + content
+
+        file.write(content)
 
 # Initialize
 main()
