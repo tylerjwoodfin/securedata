@@ -12,10 +12,14 @@ def main():
     os.chdir(thisDirectory)
     
     # initialize settings file if it doesn't exist
-    _settingsFile = open('settings.json', 'r+')
-    if(len(_settingsFile.read()) == 0):
-        _settingsFile.write('{}')
-    _settingsFile.close()
+    try:
+        with open('settings.json', 'r+') as f:
+            f.seek(0, os.SEEK_END)
+            print(f.tell())
+    except:
+        with open('settings.json', 'x+') as f:
+            log("settings.json not found; initialized to {}")
+            f.write('{}')
 
     settings = json.load(open('settings.json'))
 
@@ -172,3 +176,6 @@ def log(content="", logName="LOG_DAILY", clear=False, filePath=""):
 
 # Initialize
 main()
+
+if __name__ == "__main__":
+    print(f"SecureData is a library not intended to be directly run. See README.md.")
