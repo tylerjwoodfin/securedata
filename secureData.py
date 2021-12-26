@@ -1,104 +1,174 @@
-# ReadMe
-# Returns files from my SecureData folder (and other folders as needed)
-# Dependencies: rclone
-
-from pathlib import Path
 import os
-import datetime
-import pwd
+import json
+from datetime import datetime
+import pathlib
 
-userDir = pwd.getpwuid( os.getuid() )[ 0 ]
+def main():
+    global securePath
+    global settings
+    global logPath
 
-# Change this line to modify where your data is stored
-securePath = f"/home/{userDir}/SecureData/"
+    thisDirectory = pathlib.Path(__file__).parent.resolve()
+    os.chdir(thisDirectory)
+    
+    # initialize settings file if it doesn't exist
+    _settingsFile = open('settings.json', 'r+')
+    if(len(_settingsFile.read()) == 0):
+        _settingsFile.write('{}')
+    _settingsFile.close()
 
-# don't modify these lines directly! These are just defaults. See ReadMe.md in https://github.com/tylerjwoodfin/RaspberryPi-Tasks
-piTasksNotesPath = f"/home/{userDir}/Dropbox/Notes"
-piTasksCloudProvider = "Dropbox:"
-piTasksCloudProviderPath = "Notes"
-directory = __file__
+    settings = json.load(open('settings.json'))
 
-# prepares files for other functions
-def __initialize(item, path, action="a+"):
-    if(path == "notes"):
-        path = piTasksNotesPath
-    if("/" in path and not path.endswith("/")):
-        path += "/"
-    if not os.path.exists(path):
-        os.makedirs(path)
-    if not os.path.exists(path + item):
-        f = open(path + item, 'w')
-        f.write('')
-        f.close()
+    # Determines where data is stored, like `securePath = "/home/raspberry/data"`
+    securePath = getItem('path_secureData') or setItem(
+        'path_secureData', str(thisDirectory), fileName='settings.json')
 
-    if(path == piTasksNotesPath):
-        # pull from Dropbox
-        os.system(f"rclone copyto {piTasksCloudProvider}{piTasksCloudProviderPath}/{item} {path + item}")
-    return open(path + item, action)
+    logPath = getItem('path_log') or setItem(
+        'path_log', securePath + '/log', fileName='settings.json')
+    if not os.path.exists(logPath):
+        os.makedirs(logPath)
+    if not logPath[-1] == '/':
+        logPath += '/'
+ 
+def getItem(*attribute):
+    """
+    Returns a property in settings.json.
+    Usage: get('person', 'name')
+    """
 
-# reads the first line of a file
-def variable(item, path=securePath):
-    f = __initialize(item, path)
-    f.seek(0,0)
+    global settings
+    _settings = settings
+
+    for index, item in enumerate(attribute):
+        if item in _settings:
+            _settings = _settings[item]
+        else:
+            print(f"Warning: {item} not found in {_settings if index > 0 else 'settings.json'}")
+            return None
+
+    return _settings
+
+def setItem(*attribute, value=None, fileName='settings.json'):
+    """
+    Sets a property in settings.json (or some other `fileName`).
+    Usage: set('person', 'name', 'Tyler')
+    The last argument is the value to set, unless value is specified.
+    Returns the value set.
+    """
+
+    global settings
+
+    if(not value):
+        value = attribute[-1]
+
+    _settings = settings if fileName == 'settings.json' else json.load(open(fileName))
+
+    # iterate through entire JSON object and replace 2nd to last attribute with value
+
+    partition = _settings
+    for index, item in enumerate(attribute[:-1]):
+        if item not in partition:
+            partition[item] = value if index == len(attribute) - 2 else {}
+            partition = partition[item]
+            print(f"Warning: {item} not found in {partition if index > 0 else fileName}")
+        else:
+            if(index == len(attribute) -2):
+                partition[item] = value
+            else:
+                partition = partition[item]
+
+    with open(fileName, 'w+') as file:
+        json.dump(_settings, file, indent=4)
+
+    return value
+
+def getFileAsArray(item, filePath=""):
+    """
+    Returns the file as an array
+    """
+
+    global logPath
+    if(filePath == ""):
+        filePath = logPath
+    elif(filePath == "notes"):
+        filePath = getItem('path_tasks_notes')
+
+        if(not filePath[-1] == '/'):
+            filePath += '/'
+
+        # pull from cloud
+        try:
+            os.system(f"rclone copy {getItem('path_cloud_notes')} {filePath}")
+        except Exception as e:
+            log(f"Could not pull Notes from cloud: {e}")
+
     try:
-        return f.read().rstrip().splitlines()[0]
-    except:
-        log(f"Error: {item} not found in {path}")
-        return ''
+        content = open(filePath + item, "r").read()
+        return content.split('\n')
+    except Exception as e:
+        log(f"Error for getFileAsArray: {e}")
+        return ""
 
-# override default notes directory
-piTasksNotesPath = variable("PiTasksNotesPath") if len(variable("PiTasksNotesPath")) > 0 else piTasksNotesPath
-if(piTasksNotesPath[-1] != "/"):
-    piTasksNotesPath += "/"
+def writeFile(fileName, filePath="", content="", append=False):
+    """
+    Writes a file to the specified path and creates subfolders if necessary
+    """
 
-piTasksCloudProvider = variable("PiTasksCloudProvider") if len(variable("PiTasksCloudProvider")) > 0 else piTasksCloudProvider
-if(piTasksCloudProvider[-1] != ":"):
-    piTasksCloudProvider += ":"
+    global logPath
+    if(filePath == ""):
+        filePath = logPath
+    elif(filePath == "notes"):
+        _filePath = filePath
+        filePath = getItem('path_tasks_notes')
 
-piTasksCloudProviderPath = variable("PiTasksCloudProviderPath") if len(variable("PiTasksCloudProviderPath")) > 0 else piTasksCloudProviderPath
+    if not os.path.exists(filePath):
+        os.makedirs(filePath)
 
-# returns the file as an array
-def array(item, path=securePath):
-    f = __initialize(item, path)
-    f.seek(0,0)
-    array = f.read().rstrip().splitlines()
-    if(not array):
-        log(f"Error: {item} not found in {path}")
+    with open(filePath + "/" + fileName, 'w+' if not append else 'a+') as file:
+        file.write(content)
 
-    return array
+    # push to cloud
+    if(_filePath == "notes"):
+        try:
+            os.system(f"rclone copy {filePath} {getItem('path_cloud_notes')}")
+        except Exception as e:
+            log(f"Could not sync Notes to cloud: {e}")
 
-# returns the file as a string without splitting
-def file(item, path=securePath):
-    f = __initialize(item, path)
-    f.seek(0,0)
-    return f.read().rstrip()
+def log(content="", logName="LOG_DAILY", clear=False, filePath=""):
+    """
+    Appends to a log file, or deletes it if clear is True.
+    """
 
-# writes a file, replacing the contents entirely
-def write(item, content, path=securePath):
-    f = __initialize(item, path, "w")
-    f.write(content)
-    f.close()
+    global logPath
+    if(filePath == ""):
+        filePath = logPath
 
-    # Push to Dropbox
-    if(path == piTasksNotesPath or path == "notes"):
-        path = piTasksNotesPath
-        os.system(f"rclone copyto {path + item} {piTasksCloudProvider}{piTasksCloudProviderPath}/{item}")
+    logName = logPath + logName
 
-# appends to a file where duplicate lines in 'content' will be removed
-def appendUnique(item, content, path=securePath):
-    content = file(item, path) + '\n' + content
-    if(content[0] == '\n'):
-        content = content[1:]
-    lines = content.splitlines()
-    lines = list(dict.fromkeys(lines))
-    content = '\n'.join(lines)
-    write(item, content, path)
-
-# appends to a daily Log file, sent and reset at the end of each day
-def log(content="", logName="LOG_DAILY", clear=False):
-    print(f"{datetime.datetime.now().strftime('%H:%M:%S')}: {content}")
-    appendUnique(logName, f"{datetime.datetime.now().strftime('%H:%M:%S')}: {content}")
+    if not os.path.exists(filePath):
+        os.makedirs(filePath)
 
     if(clear):
         print(f"Clearing {logName}")
-        write(logName, "")
+        try:
+            os.remove(logName)
+        except:
+            print(f"Error: {logName} not found")
+        return
+
+    content = f"{datetime.now().strftime('%H:%M:%S')}: {content}"
+
+    print(content)
+
+    # create file if it doesn't exist
+    logFile = pathlib.Path(logName)
+    logFile.touch(exist_ok=True)
+
+    with open(logName, 'a+') as file:
+        if(os.path.getsize(logName) > 0 and str(file)[-1] != '\n'):
+            content = '\n' + content
+
+        file.write(content)
+
+# Initialize
+main()
