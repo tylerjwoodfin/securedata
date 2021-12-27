@@ -1,3 +1,16 @@
+Metadata-Version: 2.1
+Name: securedata
+Version: 2021.12.26.7
+Summary: Easily manage data storage and logging across repos
+Home-page: https://github.com/tylerjwoodfin/SecureData
+Author: Tyler Woodfin
+Author-email: tyler@tylerwoodfin.com
+License: : OSI Approved :: MIT License
+Platform: UNKNOWN
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: LICENSE.md
+
 # SecureData
 A library that allows for easy reading/writing of settings across repositories, as well as logging.
 
@@ -51,3 +64,4 @@ print(securedata.getItem("employee", "Tyler", "salary")) # given example setting
 > python3 test.py
 > 100000
 ```
+

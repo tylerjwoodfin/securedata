@@ -1,0 +1,3 @@
+import securedata
+
+securedata.main()
