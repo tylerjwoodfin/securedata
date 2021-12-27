@@ -17,11 +17,11 @@ def main():
     if initialized:
         return
 
-    # Determines where data is stored; by default, this is ~/securedata
-    securePath = getItem('path_secureData') or f'{os.path.expanduser("~")}/securedata'
-
     # config file, stored within the package
     configPath = f'{pathlib.Path(__file__).resolve().parent}/config.json'
+
+    # Determines where data is stored; by default, this is ~/securedata
+    securePath = getConfigItem('path_secureData') or f'{os.path.expanduser("~")}/securedata'
 
     # initialize settings file if it doesn't exist
     try:
@@ -142,10 +142,11 @@ def writeFile(fileName, filePath=None, content=None, append=False):
     """
 
     global logPath
+    _filePath = filePath
+    
     if filePath == None:
         filePath = logPath
     elif filePath == "notes":
-        _filePath = filePath
         filePath = getItem('path_tasks_notes')
 
     if content == None:
@@ -165,6 +166,8 @@ def writeFile(fileName, filePath=None, content=None, append=False):
             log(f"Could not sync Notes to cloud: {e}")
 
 def getConfigItem(key=None):
+    global configPath
+
     try:
         with open(configPath, 'r+') as file:
             return json.load(file)[key]
@@ -172,6 +175,8 @@ def getConfigItem(key=None):
         if key == 'securePath':
             setConfigItem(key, str(pathlib.Path(getItem('path_log')).resolve().parent))
             return str(pathlib.Path(getItem('path_log')).resolve().parent)
+    except KeyError:
+        return None
 
 def setConfigItem(key=None, value=None):
     """
