@@ -127,13 +127,13 @@ def getFileAsArray(item, filePath=None):
         try:
             os.system(f"rclone copy {getItem('path_cloud_notes')} {filePath}")
         except Exception as e:
-            log(f"Could not pull Notes from cloud: {e}")
+            log(f"Could not pull Notes from cloud: {e}", level="error")
 
     try:
         content = open(filePath + item, "r").read()
         return content.split('\n')
     except Exception as e:
-        log(f"Error for getFileAsArray: {e}")
+        log(f"getFileAsArray: {e}", level="error")
         return ""
 
 
@@ -164,7 +164,7 @@ def writeFile(fileName, filePath=None, content=None, append=False):
         try:
             os.system(f"rclone copy {filePath} {getItem('path_cloud_notes')}")
         except Exception as e:
-            log(f"Could not sync Notes to cloud: {e}")
+            log(f"Could not sync Notes to cloud: {e}", level="error")
 
 def getConfigItem(key=None):
     global configPath
