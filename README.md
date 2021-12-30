@@ -34,7 +34,7 @@ securedata config
 ```
 from securedata import securedata
 
-securedata.setItem("employee", "Tyler", "salary", 100000)
+securedata.setItem("employee", "Tyler", "salary", 7.25)
 ```
 
 results in this structure in settings.json:
@@ -43,7 +43,7 @@ results in this structure in settings.json:
 {
     "employee": {
         "Tyler": {
-            "salary": 100000
+            "salary": 7.25
         }
     }
 }
@@ -51,8 +51,6 @@ results in this structure in settings.json:
 
 ### `getItem`
 ```
-# test.py
-
 from securedata import securedata
 
 print(securedata.getItem("employee", "Tyler", "salary")) # given example settings.json above
@@ -60,7 +58,28 @@ print(securedata.getItem("employee", "Tyler", "salary")) # given example setting
 
 ```
 > python3 test.py
-> 100000
+> 7.25
+```
+
+### `log`
+```
+from securedata import securedata
+
+# writes to a file named LOG_DAILY YYYY-MM-DD in the default log folder (or securedata.getItem('path_log')) inside a YYYY-MM-DD folder
+securedata.log("Dear Diary...")
+securedata.log("This function hit a breakpoint", level="debug")
+securedata.log("Looks like the server is on fire", level="critical")
+securedata.log("This is fine", level="info")
+
+# writes to a file named LOG_TEMPERATURE
+securedata.log("30", logName="LOG_TEMPERATURE")
+
+# writes to a file named LOG_TEMPERATURE in /home/pi/weather
+securedata.log("30", logName="LOG_TEMPERATURE", filePath="/home/pi/weather")
+
+    # format
+    # 2021-12-29 19:29:27,896 — INFO — 30
+
 ```
 
 ## Dependencies

@@ -1,8 +1,9 @@
 import os
-from sys import argv, exit
 import json
-from datetime import datetime
 import pathlib
+import logging
+from sys import argv, exit, stdout
+from datetime import date
 
 initialized = False
 
@@ -212,45 +213,64 @@ def setConfigItem(key=None, value=None):
 
     return value
 
-def log(content=None, logName=None, clear=False, filePath=None):
+def getLogger(logName=None, level=logging.INFO, filePath=None):
     """
-    Appends to a log file, or deletes it if clear is True.
+    Returns a custom logger with the given name and level
     """
 
-    global logPath
+    today = str(date.today())
+
+    if filePath == None:
+        filePath = f"{logPath}{today}"
     if logName == None:
         logName = "LOG_DAILY"
 
-    if(filePath == None):
-        filePath = logPath
-
-    logName = logPath + logName
-
+    # create path if necessary
     if not os.path.exists(filePath):
         print(f"Creating {filePath}")
         os.makedirs(filePath)
+    
+    logger = logging.getLogger(logName)
+    logger.setLevel(level)
+    
+    if logger.handlers:
+        logger.handlers = []
 
-    if(clear):
-        print(f"Clearing {logName}")
-        try:
-            os.remove(logName)
-        except:
-            print(f"Error: {logName} not found")
-        return
+    format_string = ("%(asctime)s — %(levelname)s — %(message)s")
+    log_format = logging.Formatter(format_string)
+    console_handler = logging.StreamHandler(stdout)
+    console_handler.setFormatter(log_format)
+    logger.addHandler(console_handler)
+    file_handler = logging.FileHandler(f"{filePath}/{logName} {today}", mode='a')
+    file_handler.setFormatter(log_format)
 
-    content = f"{datetime.now().strftime('%H:%M:%S')}: {content}"
+    logger.addHandler(file_handler)
+    return logger
 
-    print(content)
+def log(message=None, logName=None, level="info", filePath=None):
 
-    # create file if it doesn't exist
-    logFile = pathlib.Path(logName)
-    logFile.touch(exist_ok=True)
-
-    with open(logName, 'a+') as file:
-        if(os.path.getsize(logName) > 0 and str(file)[-1] != '\n'):
-            content = '\n' + content
-
-        file.write(content)
+    if message == None:
+        message = ""
+    
+    if level == None or level == "info":
+        logger = getLogger(logName=logName, level=logging.INFO, filePath=filePath)
+        logger.info(message)
+    elif level == "debug":
+        logger = getLogger(logName=logName, level=logging.DEBUG, filePath=filePath)
+        logger.debug(message)
+    elif level == "warn" or level == "warning":
+        logger = getLogger(logName=logName, level=logging.WARN, filePath=filePath)
+        logger.warning(message)
+    elif level == "error":
+        logger = getLogger(logName=logName, level=logging.ERROR, filePath=filePath)
+        logger.error(message)
+    elif level == "critical":
+        logger = getLogger(logName=logName, level=logging.CRITICAL, filePath=filePath)
+        logger.critical(message)
+    else:
+        logger = getLogger(logName=logName, level=logging.ERROR, filePath=filePath)
+        logger.error(f"Unknown log level: {level}; using ERROR")
+        logger.error(message)
 
 
 # Initialize
