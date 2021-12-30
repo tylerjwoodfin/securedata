@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: securedata
-Version: 2021.12.29.3
+Version: 2021.12.30.1
 Summary: Easily manage data storage and logging across repos
 Home-page: https://github.com/tylerjwoodfin/SecureData
 Author: Tyler Woodfin
@@ -97,4 +97,7 @@ securedata.log("30", logName="LOG_TEMPERATURE", filePath="/home/pi/weather")
 
 ## Dependencies
 - Python >= 3.6
+- [Rclone](https://rclone.org)
+    - optional, used to sync data to/from cloud providers
+    - support for customizing this with `securedata.config` in a future update
 

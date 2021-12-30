@@ -84,3 +84,6 @@ securedata.log("30", logName="LOG_TEMPERATURE", filePath="/home/pi/weather")
 
 ## Dependencies
 - Python >= 3.6
+- [Rclone](https://rclone.org)
+    - optional, used to sync data to/from cloud providers
+    - support for customizing this with `securedata.config` in a future update
