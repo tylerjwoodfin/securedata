@@ -223,7 +223,7 @@ def getLogger(logName=None, level=logging.INFO, filePath=None):
     if filePath == None:
         filePath = f"{logPath}{today}"
     if logName == None:
-        logName = "LOG_DAILY"
+        logName = f"LOG_DAILY {today}"
 
     # create path if necessary
     if not os.path.exists(filePath):
@@ -241,7 +241,7 @@ def getLogger(logName=None, level=logging.INFO, filePath=None):
     console_handler = logging.StreamHandler(stdout)
     console_handler.setFormatter(log_format)
     logger.addHandler(console_handler)
-    file_handler = logging.FileHandler(f"{filePath}/{logName} {today}", mode='a')
+    file_handler = logging.FileHandler(f"{filePath}/{logName}", mode='a')
     file_handler.setFormatter(log_format)
 
     logger.addHandler(file_handler)
