@@ -1,8 +1,8 @@
 Metadata-Version: 2.1
 Name: securedata
-Version: 2022.1.4.2
+Version: 2022.1.8.2
 Summary: Easily manage data storage and logging across repos
-Home-page: https://github.com/tylerjwoodfin/SecureData
+Home-page: https://github.com/tylerjwoodfin/securedata
 Author: Tyler Woodfin
 Author-email: tyler@tylerwoodfin.com
 License: : OSI Approved :: MIT License

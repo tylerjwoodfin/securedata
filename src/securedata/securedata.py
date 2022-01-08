@@ -22,7 +22,7 @@ def main():
     configPath = f'{pathlib.Path(__file__).resolve().parent}/config.json'
 
     # Determines where data is stored; by default, this is ~/securedata
-    securePath = getConfigItem('path_secureData') or f'{os.path.expanduser("~")}/securedata'
+    securePath = getConfigItem('path_securedata') or f'{os.path.expanduser("~")}/securedata'
 
     # initialize settings file if it doesn't exist
     try:
