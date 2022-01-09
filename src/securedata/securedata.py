@@ -196,8 +196,9 @@ def setConfigItem(key=None, value=None):
 
     if value == None or key == None:
         print("No changes were made.")
+        exit(1)
     else:
-
+        
         # error correction
         if(key == 'path_securedata' and value[0] != '/' and value[0] != '~'):
             value = f"/{value}"
