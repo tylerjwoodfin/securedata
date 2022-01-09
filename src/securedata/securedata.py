@@ -22,21 +22,21 @@ def main():
     configPath = f'{pathlib.Path(__file__).resolve().parent}/config.json'
 
     # Determines where data is stored; by default, this is ~/securedata
-    securePath = getConfigItem('path_securedata') or f'{os.path.expanduser("~")}/securedata'
+    securePath = os.path.expanduser(getConfigItem('path_securedata')) or f'{os.path.expanduser("~")}/securedata'
 
     # initialize settings file if it doesn't exist
     try:
-        with open(os.path.expanduser(f'{securePath}/settings.json'), 'r+') as f:
+        with open(f'{securePath}/settings.json', 'r+') as f:
             f.seek(0, os.SEEK_END)
     except:
         if not os.path.exists(securePath):
             os.makedirs(securePath)
-        with open(os.path.expanduser(f'{securePath}/settings.json'), 'x+') as f:
+        with open(f'{securePath}/settings.json', 'x+') as f:
             print(f"\n\nWarning: settings.json not found; created a blank one in {securePath}")
             print("You can change this location by calling 'securedata config'.\n\n")
             f.write('{}')
 
-    settings = json.load(open(os.path.expanduser(f'{securePath}/settings.json')))
+    settings = json.load(open(f'{securePath}/settings.json'))
 
     logPath = getItem('path_log') or setItem(
         'path_log', f"{securePath}/log", fileName='settings.json')
