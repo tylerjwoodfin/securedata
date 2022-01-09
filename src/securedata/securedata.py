@@ -194,7 +194,7 @@ def setConfigItem(key=None, value=None):
     Updates the internal configuration file
     """
 
-    if value == None or value == None:
+    if value == None or key == None:
         print("No changes were made.")
     else:
 
