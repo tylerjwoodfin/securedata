@@ -26,17 +26,17 @@ def main():
 
     # initialize settings file if it doesn't exist
     try:
-        with open(f'{securePath}/settings.json', 'r+') as f:
+        with open(os.path.expanduser(f'{securePath}/settings.json'), 'r+') as f:
             f.seek(0, os.SEEK_END)
     except:
         if not os.path.exists(securePath):
             os.makedirs(securePath)
-        with open(f'{securePath}/settings.json', 'x+') as f:
+        with open(os.path.expanduser(f'{securePath}/settings.json'), 'x+') as f:
             print(f"\n\nWarning: settings.json not found; created a blank one in {securePath}")
             print("You can change this location by calling 'securedata config'.\n\n")
             f.write('{}')
 
-    settings = json.load(open(f'{securePath}/settings.json'))
+    settings = json.load(open(os.path.expanduser(f'{securePath}/settings.json')))
 
     logPath = getItem('path_log') or setItem(
         'path_log', f"{securePath}/log", fileName='settings.json')
@@ -173,7 +173,7 @@ def getConfigItem(key=None):
         with open(configPath, 'r+') as file:
             return json.load(file)[key]
     except FileNotFoundError:
-        if key == 'securePath':
+        if key == 'path_securedata':
             setConfigItem(key, str(pathlib.Path(getItem('path_log')).resolve().parent))
             return str(pathlib.Path(getItem('path_log')).resolve().parent)
     except KeyError:
@@ -191,11 +191,16 @@ def setConfigItem(key=None, value=None):
     else:
 
         # error correction
-        if(key == 'securePath' and value[0] != '/'):
+        if(key == 'path_securedata' and value[0] != '/' and value[0] != '~'):
             value = f"/{value}"
-        if(key == 'securePath' and value[-1] == '/'):
+        if(key == 'path_securedata' and value[-1] == '/'):
             value = f"{value[:-1]}"
-        print(f"\n\nUpdated configuration.")
+
+        # warn about potential problems
+        if(not os.path.exists(os.path.expanduser(value))):
+            print(f"Warning: {value} is not a valid path.")
+        if(value[0] == '~'):
+            print("Warning: using tilde expansions may cause problems if using securedata for multiple users. It is recommended to use full paths.")
 
     try:
         with open(configPath, 'r+') as file:
@@ -210,6 +215,9 @@ def setConfigItem(key=None, value=None):
 
     with open(f'{pathlib.Path(__file__).resolve().parent}/config.json', 'w+') as file:
         json.dump(config, file, indent=4)
+
+    print(f"\n\nUpdated configuration file ({pathlib.Path(__file__).resolve().parent}/config.json).")
+    print(f"{key} is now {value}")
 
     return value
 
@@ -280,4 +288,4 @@ if __name__ == "__main__":
     print(f"SecureData is a library not intended to be directly run. See README.md.")
 
 if argv[-1] == 'config':
-    setConfigItem('securePath', input("Enter the full path of where you want to store all data:\n"))
+    setConfigItem('path_securedata', input("Enter the full path of where you want to store all data:\n"))
