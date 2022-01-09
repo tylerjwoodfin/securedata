@@ -7,39 +7,50 @@ from datetime import date
 
 initialized = False
 
+default_user_loc = os.environ['HOME'] + '/securedata/'
+default_user_settings = default_user_loc + 'settings.json'
+
+'''
+  The default location for a user's settings file would be
+  securedata directory under user's home directory.
+
+  There is no need to store the location in a config.json since
+  if the module is globally installed, two users could step on 
+  each other and in that case they won't have write permissions
+  to write over to that file ( because it's owned by root )
+
+  Normally, user's home directory is where his customizations should be.
+'''
+
 def main():
     global securePath
     global settings
     global logPath
-    global configPath
     global initialized
     settings = None
 
     if initialized:
         return
 
-    # config file, stored within the package
-    configPath = f'{pathlib.Path(__file__).resolve().parent}/config.json'
-
     # Determines where data is stored; by default, this is ~/securedata
-    securePath = os.path.expanduser(getConfigItem('path_securedata')) or f'{os.path.expanduser("~")}/securedata'
+    securePath = default_user_loc
 
     # initialize settings file if it doesn't exist
     try:
-        with open(f'{securePath}/settings.json', 'r+') as f:
-            f.seek(0, os.SEEK_END)
+      print(securePath)
+      os.makedirs(securePath, exist_ok=True)
+      with open(default_user_settings, 'w') as f:
+        print(f"\n\nWarning: {default_user_settings} not found; created a blank one in {securePath}")
+        print("You can change this location by calling 'securedata config'.\n\n")
+        f.write('{}')
+        f.close()
     except:
-        if not os.path.exists(securePath):
-            os.makedirs(securePath)
-        with open(f'{securePath}/settings.json', 'x+') as f:
-            print(f"\n\nWarning: settings.json not found; created a blank one in {securePath}")
-            print("You can change this location by calling 'securedata config'.\n\n")
-            f.write('{}')
+        raise
 
-    settings = json.load(open(f'{securePath}/settings.json'))
+    settings = json.load(open(default_user_settings))
 
     logPath = getItem('path_log') or setItem(
-        'path_log', f"{securePath}/log", fileName='settings.json')
+        'path_log', f"{securePath}/log")
     if not os.path.exists(logPath):
         os.makedirs(logPath)
     if not logPath[-1] == '/':
@@ -167,10 +178,9 @@ def writeFile(fileName, filePath=None, content=None, append=False):
             log(f"Could not sync Notes to cloud: {e}", level="error")
 
 def getConfigItem(key=None):
-    global configPath
 
     try:
-        with open(configPath, 'r+') as file:
+        with open(default_user_settings, 'r+') as file:
             return json.load(file)[key]
     except FileNotFoundError:
         if key == 'path_securedata':
@@ -184,9 +194,7 @@ def setConfigItem(key=None, value=None):
     Updates the internal configuration file
     """
 
-    global configPath
-
-    if value == "":
+    if value == None or key == None:
         print("No changes were made.")
         exit(1)
     else:
@@ -204,10 +212,10 @@ def setConfigItem(key=None, value=None):
             print("Warning: using tilde expansions may cause problems if using securedata for multiple users. It is recommended to use full paths.")
 
     try:
-        with open(configPath, 'r+') as file:
+        with open(default_user_settings, 'r+') as file:
             config =  json.load(file)
     except FileNotFoundError:
-        with open(configPath, 'x+') as f:
+        with open(default_user_settings, 'x+') as f:
             print(f"Warning: existing config file not found; created a new one")
             f.write('{}')
             config = {}
@@ -289,4 +297,6 @@ if __name__ == "__main__":
     print(f"SecureData is a library not intended to be directly run. See README.md.")
 
 if argv[-1] == 'config':
-    setConfigItem('path_securedata', input("Enter the full path of where you want to store all data:\n"))
+    readInput = input("Enter the full path of where you want to store all data:\n")
+    if len(readInput.strip()):
+      setConfigItem('path_securedata', readInput.strip())
