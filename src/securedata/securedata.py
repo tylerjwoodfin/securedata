@@ -186,10 +186,11 @@ def setConfigItem(key=None, value=None):
 
     global configPath
 
-    if value == None:
+    if value == "":
         print("No changes were made.")
+        exit(1)
     else:
-
+        
         # error correction
         if(key == 'path_securedata' and value[0] != '/' and value[0] != '~'):
             value = f"/{value}"
