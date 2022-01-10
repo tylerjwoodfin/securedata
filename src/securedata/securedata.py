@@ -22,7 +22,7 @@ def main():
     configPath = f'{pathlib.Path(__file__).resolve().parent}/config.json'
 
     # Determines where data is stored; by default, this is ~/securedata
-    securePath = os.path.expanduser(getConfigItem('path_securedata')) or f'{os.path.expanduser("~")}/securedata'
+    securePath = os.path.expanduser(getConfigItem('path_securedata') or '~/securedata')
 
     # initialize settings file if it doesn't exist
     try:
@@ -36,10 +36,25 @@ def main():
             print("You can change this location by calling 'securedata config'.\n\n")
             f.write('{}')
 
-    settings = json.load(open(f'{securePath}/settings.json'))
+    try:
+        settings = json.load(open(f'{securePath}/settings.json'))
+    except json.decoder.JSONDecodeError as e:
+        response = input(f"The settings file ({securePath}/settings.json) is not valid JSON. Do you want to replace it with an empty JSON file? (you will lose existing data) (y/n)\n")
+        if(response.lower().startswith("y")):
+            with open(f'{securePath}/settings.json', 'w+') as f:
+                f.write('{}')
+            print("Done. Please try your last command again.")
+        else:
+            print(f"OK. Please fix {configPath}/settings.json and try again.")
 
-    logPath = getItem('path_log') or setItem(
-        'path_log', f"{securePath}/log", fileName='settings.json')
+        exit(-1)
+
+
+    logPath = getItem('path_log') 
+    if logPath == None:
+        logPath = setItem('path_log', f"{securePath}/log", fileName='settings.json')
+        print(f"\n\nCalling securedata.log in Python will now write to {securePath}/log by default.")
+        print(f"You can change this in {securePath}/settings.json.\n\n")
     if not os.path.exists(logPath):
         os.makedirs(logPath)
     if not logPath[-1] == '/':
@@ -172,12 +187,22 @@ def getConfigItem(key=None):
     try:
         with open(configPath, 'r+') as file:
             return json.load(file)[key]
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         if key == 'path_securedata':
-            setConfigItem(key, str(pathlib.Path(getItem('path_log')).resolve().parent))
-            return str(pathlib.Path(getItem('path_log')).resolve().parent)
+            setConfigItem(key, str(pathlib.Path(__file__).parent.resolve()))
+            return str(pathlib.Path(__file__).parent.resolve())
     except KeyError:
         return None
+    except json.decoder.JSONDecodeError as e:
+        response = input(f"The config file ({configPath}) is not valid JSON. Do you want to replace it with an empty JSON file?  (you will lose existing data) (y/n)\n")
+        if(response.lower().startswith("y")):
+            with open(configPath, 'w+') as f:
+                f.write('{}')
+            print("Done. Please try your last command again.")
+        else:
+            print(f"OK. Please fix {configPath} and try again.")
+
+        exit(-1)
 
 def setConfigItem(key=None, value=None):
     """
@@ -208,17 +233,17 @@ def setConfigItem(key=None, value=None):
             config =  json.load(file)
     except FileNotFoundError:
         with open(configPath, 'x+') as f:
-            print(f"Warning: existing config file not found; created a new one")
+            print(f"Note: Could not find an existing config file... creating a new one.")
             f.write('{}')
             config = {}
             
     config[key] = value
 
-    with open(f'{pathlib.Path(__file__).resolve().parent}/config.json', 'w+') as file:
+    with open(configPath, 'w+') as file:
         json.dump(config, file, indent=4)
 
-    print(f"\n\nUpdated configuration file ({pathlib.Path(__file__).resolve().parent}/config.json).")
-    print(f"{key} is now {value}")
+    print(f"\n\nUpdated configuration file ({configPath}).")
+    print(f"{key} is now {value}\n")
 
     return value
 
@@ -289,4 +314,4 @@ if __name__ == "__main__":
     print(f"SecureData is a library not intended to be directly run. See README.md.")
 
 if argv[-1] == 'config':
-    setConfigItem('path_securedata', input("Enter the full path of where you want to store all data:\n"))
+    setConfigItem('path_securedata', input(f"Enter the full path of where you want to store all data (currently {securePath}/settings.json):\n"))
