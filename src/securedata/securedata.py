@@ -275,7 +275,7 @@ def getLogger(logName=None, level=logging.INFO, filePath=None):
     console_handler = logging.StreamHandler(stdout)
     console_handler.setFormatter(log_format)
     logger.addHandler(console_handler)
-    file_handler = logging.FileHandler(f"{filePath}/{logName}", mode='a')
+    file_handler = logging.FileHandler(f"{filePath}/{logName}.log", mode='a')
     file_handler.setFormatter(log_format)
 
     logger.addHandler(file_handler)
