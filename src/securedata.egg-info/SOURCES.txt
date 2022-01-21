@@ -4,6 +4,7 @@ pyproject.toml
 setup.cfg
 src/securedata/__init__.py
 src/securedata/__main__.py
+src/securedata/mail.py
 src/securedata/securedata.py
 src/securedata.egg-info/PKG-INFO
 src/securedata.egg-info/SOURCES.txt
