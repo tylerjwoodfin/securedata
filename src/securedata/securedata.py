@@ -7,6 +7,7 @@ from datetime import date
 
 initialized = False
 
+
 def main():
     global securePath
     global settings
@@ -21,8 +22,9 @@ def main():
     # config file, stored within the package
     configPath = f'{pathlib.Path(__file__).resolve().parent}/config.json'
 
-    # Determines where data is stored; by default, this is ~/securedata
-    securePath = os.path.expanduser(getConfigItem('path_securedata') or '~/securedata')
+    # Determines where settings.json is stored; by default, this is ~/securedata
+    securePath = os.path.expanduser(
+        getConfigItem('path_securedata') or '~/securedata')
 
     # initialize settings file if it doesn't exist
     try:
@@ -32,14 +34,16 @@ def main():
         if not os.path.exists(securePath):
             os.makedirs(securePath)
         with open(f'{securePath}/settings.json', 'x+') as f:
-            print(f"\n\nWarning: settings.json not found; created a blank one in {securePath}")
+            print(
+                f"\n\nWarning: settings.json not found; created a blank one in {securePath}")
             print("You can change this location by calling 'securedata config'.\n\n")
             f.write('{}')
 
     try:
         settings = json.load(open(f'{securePath}/settings.json'))
     except json.decoder.JSONDecodeError as e:
-        response = input(f"The settings file ({securePath}/settings.json) is not valid JSON. Do you want to replace it with an empty JSON file? (you will lose existing data) (y/n)\n")
+        response = input(
+            f"The settings file ({securePath}/settings.json) is not valid JSON. Do you want to replace it with an empty JSON file? (you will lose existing data) (y/n)\n")
         if(response.lower().startswith("y")):
             with open(f'{securePath}/settings.json', 'w+') as f:
                 f.write('{}')
@@ -49,11 +53,12 @@ def main():
 
         exit(-1)
 
-
-    logPath = getItem('path_log') 
+    logPath = getItem('path_log')
     if logPath == None:
-        logPath = setItem('path_log', f"{securePath}/log", fileName='settings.json')
-        print(f"\n\nCalling securedata.log in Python will now write to {securePath}/log by default.")
+        logPath = setItem(
+            'path_log', f"{securePath}/log", fileName='settings.json')
+        print(
+            f"\n\nCalling securedata.log in Python will now write to {securePath}/log by default.")
         print(f"You can change this in {securePath}/settings.json.\n\n")
     if not os.path.exists(logPath):
         os.makedirs(logPath)
@@ -159,7 +164,7 @@ def writeFile(fileName, filePath=None, content=None, append=False):
 
     global logPath
     _filePath = filePath
-    
+
     if filePath == None:
         filePath = logPath
     elif filePath == "notes":
@@ -181,6 +186,7 @@ def writeFile(fileName, filePath=None, content=None, append=False):
         except Exception as e:
             log(f"Could not sync Notes to cloud: {e}", level="error")
 
+
 def getConfigItem(key=None):
     global configPath
 
@@ -194,7 +200,8 @@ def getConfigItem(key=None):
     except KeyError:
         return None
     except json.decoder.JSONDecodeError as e:
-        response = input(f"The config file ({configPath}) is not valid JSON. Do you want to replace it with an empty JSON file?  (you will lose existing data) (y/n)\n")
+        response = input(
+            f"The config file ({configPath}) is not valid JSON. Do you want to replace it with an empty JSON file?  (you will lose existing data) (y/n)\n")
         if(response.lower().startswith("y")):
             with open(configPath, 'w+') as f:
                 f.write('{}')
@@ -203,6 +210,7 @@ def getConfigItem(key=None):
             print(f"OK. Please fix {configPath} and try again.")
 
         exit(-1)
+
 
 def setConfigItem(key=None, value=None):
     """
@@ -215,7 +223,7 @@ def setConfigItem(key=None, value=None):
         print("No changes were made.")
         exit(1)
     else:
-        
+
         # error correction
         if(key == 'path_securedata' and value[0] != '/' and value[0] != '~'):
             value = f"/{value}"
@@ -230,13 +238,13 @@ def setConfigItem(key=None, value=None):
 
     try:
         with open(configPath, 'r+') as file:
-            config =  json.load(file)
+            config = json.load(file)
     except FileNotFoundError:
         with open(configPath, 'x+') as f:
             print(f"Note: Could not find an existing config file... creating a new one.")
             f.write('{}')
             config = {}
-            
+
     config[key] = value
 
     with open(configPath, 'w+') as file:
@@ -246,6 +254,7 @@ def setConfigItem(key=None, value=None):
     print(f"{key} is now {value}\n")
 
     return value
+
 
 def getLogger(logName=None, level=logging.INFO, filePath=None):
     """
@@ -263,10 +272,10 @@ def getLogger(logName=None, level=logging.INFO, filePath=None):
     if not os.path.exists(filePath):
         print(f"Creating {filePath}")
         os.makedirs(filePath)
-    
+
     logger = logging.getLogger(logName)
     logger.setLevel(level)
-    
+
     if logger.handlers:
         logger.handlers = []
 
@@ -281,28 +290,35 @@ def getLogger(logName=None, level=logging.INFO, filePath=None):
     logger.addHandler(file_handler)
     return logger
 
+
 def log(message=None, logName=None, level="info", filePath=None):
 
     if message == None:
         message = ""
-    
+
     if level == None or level == "info":
-        logger = getLogger(logName=logName, level=logging.INFO, filePath=filePath)
+        logger = getLogger(
+            logName=logName, level=logging.INFO, filePath=filePath)
         logger.info(message)
     elif level == "debug":
-        logger = getLogger(logName=logName, level=logging.DEBUG, filePath=filePath)
+        logger = getLogger(
+            logName=logName, level=logging.DEBUG, filePath=filePath)
         logger.debug(message)
     elif level == "warn" or level == "warning":
-        logger = getLogger(logName=logName, level=logging.WARN, filePath=filePath)
+        logger = getLogger(
+            logName=logName, level=logging.WARN, filePath=filePath)
         logger.warning(message)
     elif level == "error":
-        logger = getLogger(logName=logName, level=logging.ERROR, filePath=filePath)
+        logger = getLogger(
+            logName=logName, level=logging.ERROR, filePath=filePath)
         logger.error(message)
     elif level == "critical":
-        logger = getLogger(logName=logName, level=logging.CRITICAL, filePath=filePath)
+        logger = getLogger(
+            logName=logName, level=logging.CRITICAL, filePath=filePath)
         logger.critical(message)
     else:
-        logger = getLogger(logName=logName, level=logging.ERROR, filePath=filePath)
+        logger = getLogger(
+            logName=logName, level=logging.ERROR, filePath=filePath)
         logger.error(f"Unknown log level: {level}; using ERROR")
         logger.error(message)
 
@@ -314,4 +330,5 @@ if __name__ == "__main__":
     print(f"SecureData is a library not intended to be directly run. See README.md.")
 
 if argv[-1] == 'config':
-    setConfigItem('path_securedata', input(f"Enter the full path of where you want to store all data (currently {securePath}/settings.json):\n"))
+    setConfigItem('path_securedata', input(
+        f"Enter the full path of where you want to store all data (currently {securePath}/settings.json):\n"))

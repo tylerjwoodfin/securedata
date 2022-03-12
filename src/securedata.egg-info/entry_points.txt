@@ -1,3 +1,2 @@
 [console_scripts]
 securedata = securedata.securedata:main
-

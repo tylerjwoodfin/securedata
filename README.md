@@ -1,16 +1,19 @@
 # SecureData
+
 A library that allows for easy reading/writing of settings across repositories, as well as mail and logging.
 
 ## Author
+
 - Tyler Woodfin
-    - [GitHub](https://www.github.com/tylerjwoodfin)
-    - [Website](http://tyler.cloud)
+  - [GitHub](https://www.github.com/tylerjwoodfin)
+  - [Website](http://tyler.cloud)
 
 ## Features
+
 - Get/Set data within a JSON file in the location of your choice
 - Using rclone, automatically sync to/from directories as needed
 - Log to a file/directory of your choice without having to configure `logger` each time
-- Send/receive mail using Gmail
+- Send/receive mail
 
 ## Structure
 
@@ -24,23 +27,29 @@ A library that allows for easy reading/writing of settings across repositories, 
 ```
 
 ### mail
-- You will need to enable "less secure apps" for the Gmail account you use. [See this article](https://support.google.com/accounts/answer/6010255?hl=en).
-    - Because you're storing your password in plaintext and because your account is "less secure", I HIGHLY recommend using a "throwaway" account.
-    - It's never a good idea to reduce security on an account you regularly use.
+
+- It is NEVER a good idea to store your password in plaintext; for this reason, I strongly recommend a "throwaway" account that is only used for sending emails
+- Gmail (as of May 2022) and most other mainstream email providers won't work with this; for support, search for sending mail from your email provider with `smtplib`.
 - In `settings.json`, add the `email` object to make your settings file look like this example:
+
 ```
 {
     "email": {
-        "from": "throwaway@gmail.com",
+        "from": "throwaway@example.com",
         "from_pw": "example",
         "from_name": "Raspberry Pi",
-        "to": "destination@protonmail.com"
+        "to": "destination@protonmail.com",
+        "smtp_server": "example.com",
+        "imap_server": "example.com",
+        "port": 123
     }
 }
 ```
 
 ### Configuration
+
 - To choose where `settings.json` is stored, use
+
 ```
 securedata config
 ```
@@ -50,6 +59,7 @@ securedata config
 ## Examples
 
 ### `setItem`
+
 ```
 from securedata import securedata
 
@@ -69,6 +79,7 @@ results in this structure in settings.json:
 ```
 
 ### `getItem`
+
 ```
 from securedata import securedata
 
@@ -81,6 +92,7 @@ print(securedata.getItem("employee", "Tyler", "salary")) # given example setting
 ```
 
 ### `mail`
+
 ```
 from securedata import mail
 
@@ -88,6 +100,7 @@ mail.send('Test Subject', 'Test Body')
 ```
 
 ### `log`
+
 ```
 from securedata import securedata
 
@@ -109,11 +122,13 @@ securedata.log("30", logName="LOG_TEMPERATURE", filePath="/home/pi/weather")
 ```
 
 ## Dependencies
+
 - Python >= 3.6
 - [Rclone](https://rclone.org)
-    - optional, used to sync data to/from cloud providers
-    - support for customizing this with `securedata.config` in a future update
+  - optional, used to sync data to/from cloud providers
+  - support for customizing this with `securedata.config` in a future update
 
 ## Disclaimers
+
 - This is an early stage project. There are still some things to tweak, and although I've done quite a bit of testing, I can't guarantee everything that works on my machine will work on yours. Always back up your data to multiple places to avoid data loss.
 - If you find any issues, please contact me... or get your hands dirty and raise a PR!
