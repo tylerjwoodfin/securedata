@@ -195,8 +195,9 @@ def getConfigItem(key=None):
             return json.load(file)[key]
     except FileNotFoundError as e:
         if key == 'path_securedata':
-            setConfigItem(key, str(pathlib.Path(__file__).parent.resolve()))
-            return str(pathlib.Path(__file__).parent.resolve())
+            # set default settings.json and log path to ~/securedata
+            setConfigItem(key, f"{pathlib.Path.home().resolve()}/securedata")
+            return f"{pathlib.Path.home().resolve()}/securedata"
     except KeyError:
         return None
     except json.decoder.JSONDecodeError as e:
