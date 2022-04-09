@@ -199,7 +199,8 @@ def getConfigItem(key=None):
             setConfigItem(key, f"{pathlib.Path.home().resolve()}/securedata")
             return f"{pathlib.Path.home().resolve()}/securedata"
     except KeyError:
-        return None
+        print(f"Warning: Key error for key: {key}")
+        return ""
     except json.decoder.JSONDecodeError as e:
         response = input(
             f"The config file ({configPath}) is not valid JSON. Do you want to replace it with an empty JSON file?  (you will lose existing data) (y/n)\n")
