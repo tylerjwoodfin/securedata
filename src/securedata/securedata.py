@@ -45,11 +45,17 @@ def main():
         response = input(
             f"The settings file ({securePath}/settings.json) is not valid JSON. Do you want to replace it with an empty JSON file? (you will lose existing data) (y/n)\n")
         if(response.lower().startswith("y")):
+            print("Backing up...")
+
+            # for some reason, this only works when you call touch; TODO fix this
+            os.system(
+                f"touch {securePath}/settings-backup.json && cp {securePath}/settings.json {securePath}/settings-backup.json")
+            print(f"Backed up to {securePath}/settings-backup.json")
             with open(f'{securePath}/settings.json', 'w+') as f:
                 f.write('{}')
             print("Done. Please try your last command again.")
         else:
-            print(f"OK. Please fix {configPath}/settings.json and try again.")
+            print(f"OK. Please fix {securePath}/settings.json and try again.")
 
         exit(-1)
 
