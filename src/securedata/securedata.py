@@ -135,9 +135,9 @@ def setItem(*attribute, value=None, fileName='settings.json'):
     return value
 
 
-def getFileAsArray(item, filePath=None):
+def getFileAsArray(item, filePath=None, strip=True):
     """
-    Returns the file as an array
+    Returns the file as an array; strips using strip() unless strip is set to False
     """
 
     global logPath
@@ -157,6 +157,10 @@ def getFileAsArray(item, filePath=None):
 
     try:
         content = open(filePath + item, "r").read()
+
+        if strip is not False:
+            content = content.strip()
+
         return content.split('\n')
     except Exception as e:
         log(f"getFileAsArray: {e}", level="error")
