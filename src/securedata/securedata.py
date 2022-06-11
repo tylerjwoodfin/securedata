@@ -145,14 +145,15 @@ def getFileAsArray(item, filePath=None, strip=True):
     if(filePath == None):
         filePath = PATH_LOG
     elif(filePath == "notes"):
-        filePath = getItem('path_tasks_notes')
+        filePath = getItem('path', 'notes', 'local')
 
         if(not filePath[-1] == '/'):
             filePath += '/'
 
         # pull from cloud
         try:
-            os.system(f"rclone copy {getItem('path_cloud_notes')} {filePath}")
+            os.system(
+                f"rclone copy {getItem('path', 'notes', 'cloud')} {filePath}")
         except Exception as e:
             log(f"Could not pull Notes from cloud: {e}", level="error")
 
@@ -179,7 +180,7 @@ def writeFile(fileName, filePath=None, content=None, append=False):
     if filePath == None:
         filePath = PATH_LOG
     elif filePath == "notes":
-        filePath = getItem('path_tasks_notes')
+        filePath = getItem('path', 'notes', 'local')
 
     if content == None:
         content = ""
@@ -194,7 +195,8 @@ def writeFile(fileName, filePath=None, content=None, append=False):
     # push to cloud
     if _filePath == "notes":
         try:
-            os.system(f"rclone copy {filePath} {getItem('path_cloud_notes')}")
+            os.system(
+                f"rclone copy {filePath} {getItem('path', 'notes', 'cloud')}")
         except Exception as e:
             log(f"Could not sync Notes to cloud: {e}", level="error")
 
