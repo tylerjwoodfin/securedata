@@ -54,7 +54,7 @@ A library that allows for easy reading/writing of settings across repositories, 
 securedata config
 ```
 
-- To choose where logs will be stored, edit `settings.json` and set `path_log` to the full path to the log folder.
+- To choose where logs will be stored, edit `settings.json` and set `path -> log` to the full path to the log folder. (in other words, `{"path": "log": "/path/to/folder"})
 
 ## Examples
 
@@ -104,7 +104,7 @@ mail.send('Test Subject', 'Test Body')
 ```
 from securedata import securedata
 
-# writes to a file named LOG_DAILY YYYY-MM-DD in the default log folder (or securedata.getItem('path_log')) inside a YYYY-MM-DD folder
+# writes to a file named LOG_DAILY YYYY-MM-DD in the default log folder (or securedata.getItem('path', 'log')) inside a YYYY-MM-DD folder
 securedata.log("Dear Diary...")
 securedata.log("This function hit a breakpoint", level="debug")
 securedata.log("Looks like the server is on fire", level="critical")
@@ -130,5 +130,5 @@ securedata.log("30", logName="LOG_TEMPERATURE", filePath="/home/pi/weather")
 
 ## Disclaimers
 
-- This is an early stage project. There are still some things to tweak, and although I've done quite a bit of testing, I can't guarantee everything that works on my machine will work on yours. Always back up your data to multiple places to avoid data loss.
+- Although I've done quite a bit of testing, I can't guarantee everything that works on my machine will work on yours. Always back up your data to multiple places to avoid data loss.
 - If you find any issues, please contact me... or get your hands dirty and raise a PR!

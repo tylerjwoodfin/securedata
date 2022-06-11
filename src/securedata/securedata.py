@@ -9,67 +9,68 @@ initialized = False
 
 
 def main():
-    global securePath
-    global settings
-    global logPath
-    global configPath
+    global PATH_SECUREDATA
+    global PATH_LOG
+    global PATH_CONFIG_FILE
+    global SETTINGS
     global initialized
-    settings = None
+    SETTINGS = None
 
     if initialized:
         return
 
     # config file, stored within the package
-    configPath = f'{pathlib.Path(__file__).resolve().parent}/config.json'
+    PATH_CONFIG_FILE = f'{pathlib.Path(__file__).resolve().parent}/config.json'
 
     # Determines where settings.json is stored; by default, this is ~/securedata
-    securePath = os.path.expanduser(
+    PATH_SECUREDATA = os.path.expanduser(
         getConfigItem('path_securedata') or '~/securedata')
 
     # initialize settings file if it doesn't exist
     try:
-        with open(f'{securePath}/settings.json', 'r+') as f:
+        with open(f'{PATH_SECUREDATA}/settings.json', 'r+') as f:
             f.seek(0, os.SEEK_END)
     except:
-        if not os.path.exists(securePath):
-            os.makedirs(securePath)
-        with open(f'{securePath}/settings.json', 'x+') as f:
+        if not os.path.exists(PATH_SECUREDATA):
+            os.makedirs(PATH_SECUREDATA)
+        with open(f'{PATH_SECUREDATA}/settings.json', 'x+') as f:
             print(
-                f"\n\nWarning: settings.json not found; created a blank one in {securePath}")
+                f"\n\nWarning: settings.json not found; created a blank one in {PATH_SECUREDATA}")
             print("You can change this location by calling 'securedata config'.\n\n")
             f.write('{}')
 
     try:
-        settings = json.load(open(f'{securePath}/settings.json'))
+        SETTINGS = json.load(open(f'{PATH_SECUREDATA}/settings.json'))
     except json.decoder.JSONDecodeError as e:
         response = input(
-            f"The settings file ({securePath}/settings.json) is not valid JSON. Do you want to replace it with an empty JSON file? (you will lose existing data) (y/n)\n")
+            f"The settings file ({PATH_SECUREDATA}/settings.json) is not valid JSON. Do you want to replace it with an empty JSON file? (you will lose existing data) (y/n)\n")
         if(response.lower().startswith("y")):
             print("Backing up...")
 
             # for some reason, this only works when you call touch; TODO fix this
             os.system(
-                f"touch {securePath}/settings-backup.json && cp {securePath}/settings.json {securePath}/settings-backup.json")
-            print(f"Backed up to {securePath}/settings-backup.json")
-            with open(f'{securePath}/settings.json', 'w+') as f:
+                f"touch {PATH_SECUREDATA}/settings-backup.json && cp {PATH_SECUREDATA}/settings.json {PATH_SECUREDATA}/settings-backup.json")
+            print(f"Backed up to {PATH_SECUREDATA}/settings-backup.json")
+            with open(f'{PATH_SECUREDATA}/settings.json', 'w+') as f:
                 f.write('{}')
             print("Done. Please try your last command again.")
         else:
-            print(f"OK. Please fix {securePath}/settings.json and try again.")
+            print(
+                f"OK. Please fix {PATH_SECUREDATA}/settings.json and try again.")
 
         exit(-1)
 
-    logPath = getItem('path_log')
-    if logPath == None:
-        logPath = setItem(
-            'path_log', f"{securePath}/log", fileName='settings.json')
+    PATH_LOG = getItem('path', 'log')
+    if PATH_LOG == None:
+        PATH_LOG = setItem(
+            'path', 'log', f"{PATH_SECUREDATA}/log", fileName='settings.json')
         print(
-            f"\n\nCalling securedata.log in Python will now write to {securePath}/log by default.")
-        print(f"You can change this in {securePath}/settings.json.\n\n")
-    if not os.path.exists(logPath):
-        os.makedirs(logPath)
-    if not logPath[-1] == '/':
-        logPath += '/'
+            f"\n\nCalling securedata.log in Python will now write to {PATH_SECUREDATA}/log by default.")
+        print(f"You can change this in {PATH_SECUREDATA}/settings.json.\n\n")
+    if not os.path.exists(PATH_LOG):
+        os.makedirs(PATH_LOG)
+    if not PATH_LOG[-1] == '/':
+        PATH_LOG += '/'
 
     initialized = True
 
@@ -80,18 +81,18 @@ def getItem(*attribute):
     Usage: get('person', 'name')
     """
 
-    global settings
-    if settings == None:
+    global SETTINGS
+    if SETTINGS == None:
         return None
 
-    _settings = settings
+    _settings = SETTINGS
 
     for index, item in enumerate(attribute):
         if item in _settings:
             _settings = _settings[item]
         else:
             print(
-                f"Warning: {item} not found in {_settings if index > 0 else f'{securePath}/settings.json'}")
+                f"Warning: {item} not found in {_settings if index > 0 else f'{PATH_SECUREDATA}/settings.json'}")
             return None
 
     return _settings
@@ -105,13 +106,13 @@ def setItem(*attribute, value=None, fileName='settings.json'):
     Returns the value set.
     """
 
-    global settings
-    secureFullPath = f"{securePath}/{fileName}"
+    global SETTINGS
+    secureFullPath = f"{PATH_SECUREDATA}/{fileName}"
 
     if(not value):
         value = attribute[-1]
 
-    _settings = settings if fileName == 'settings.json' else json.load(
+    _settings = SETTINGS if fileName == 'settings.json' else json.load(
         open(secureFullPath))
 
     # iterate through entire JSON object and replace 2nd to last attribute with value
@@ -140,9 +141,9 @@ def getFileAsArray(item, filePath=None, strip=True):
     Returns the file as an array; strips using strip() unless strip is set to False
     """
 
-    global logPath
+    global PATH_LOG
     if(filePath == None):
-        filePath = logPath
+        filePath = PATH_LOG
     elif(filePath == "notes"):
         filePath = getItem('path_tasks_notes')
 
@@ -172,11 +173,11 @@ def writeFile(fileName, filePath=None, content=None, append=False):
     Writes a file to the specified path and creates subfolders if necessary
     """
 
-    global logPath
+    global PATH_LOG
     _filePath = filePath
 
     if filePath == None:
-        filePath = logPath
+        filePath = PATH_LOG
     elif filePath == "notes":
         filePath = getItem('path_tasks_notes')
 
@@ -188,6 +189,7 @@ def writeFile(fileName, filePath=None, content=None, append=False):
 
     with open(filePath + "/" + fileName, 'w+' if not append else 'a+') as file:
         file.write(content)
+        print(f"Wrote to '{filePath}/{fileName}'")
 
     # push to cloud
     if _filePath == "notes":
@@ -198,10 +200,10 @@ def writeFile(fileName, filePath=None, content=None, append=False):
 
 
 def getConfigItem(key=None):
-    global configPath
+    global PATH_CONFIG_FILE
 
     try:
-        with open(configPath, 'r+') as file:
+        with open(PATH_CONFIG_FILE, 'r+') as file:
             return json.load(file)[key]
     except FileNotFoundError as e:
         if key == 'path_securedata':
@@ -213,13 +215,13 @@ def getConfigItem(key=None):
         return ""
     except json.decoder.JSONDecodeError as e:
         response = input(
-            f"The config file ({configPath}) is not valid JSON. Do you want to replace it with an empty JSON file?  (you will lose existing data) (y/n)\n")
+            f"The config file ({PATH_CONFIG_FILE}) is not valid JSON. Do you want to replace it with an empty JSON file?  (you will lose existing data) (y/n)\n")
         if(response.lower().startswith("y")):
-            with open(configPath, 'w+') as f:
+            with open(PATH_CONFIG_FILE, 'w+') as f:
                 f.write('{}')
             print("Done. Please try your last command again.")
         else:
-            print(f"OK. Please fix {configPath} and try again.")
+            print(f"OK. Please fix {PATH_CONFIG_FILE} and try again.")
 
         exit(-1)
 
@@ -229,7 +231,7 @@ def setConfigItem(key=None, value=None):
     Updates the internal configuration file
     """
 
-    global configPath
+    global PATH_CONFIG_FILE
 
     if value == "":
         print("No changes were made.")
@@ -249,20 +251,20 @@ def setConfigItem(key=None, value=None):
             print("Warning: using tilde expansions may cause problems if using securedata for multiple users. It is recommended to use full paths.")
 
     try:
-        with open(configPath, 'r+') as file:
+        with open(PATH_CONFIG_FILE, 'r+') as file:
             config = json.load(file)
     except FileNotFoundError:
-        with open(configPath, 'x+') as f:
+        with open(PATH_CONFIG_FILE, 'x+') as f:
             print(f"Note: Could not find an existing config file... creating a new one.")
             f.write('{}')
             config = {}
 
     config[key] = value
 
-    with open(configPath, 'w+') as file:
+    with open(PATH_CONFIG_FILE, 'w+') as file:
         json.dump(config, file, indent=4)
 
-    print(f"\n\nUpdated configuration file ({configPath}).")
+    print(f"\n\nUpdated configuration file ({PATH_CONFIG_FILE}).")
     print(f"{key} is now {value}\n")
 
     return value
@@ -276,7 +278,7 @@ def getLogger(logName=None, level=logging.INFO, filePath=None):
     today = str(date.today())
 
     if filePath == None:
-        filePath = f"{logPath}{today}"
+        filePath = f"{PATH_LOG}{today}"
     if logName == None:
         logName = f"LOG_DAILY {today}"
 
@@ -343,4 +345,4 @@ if __name__ == "__main__":
 
 if argv[-1] == 'config':
     setConfigItem('path_securedata', input(
-        f"Enter the full path of where you want to store all data (currently {securePath}/settings.json):\n"))
+        f"Enter the full path of where you want to store all data (currently {PATH_SECUREDATA}/settings.json):\n"))
