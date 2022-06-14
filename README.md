@@ -26,6 +26,11 @@ A library that allows for easy reading/writing of settings across repositories, 
   python3 -m pip install securedata
 ```
 
+### editFile
+
+- see example below
+- You can also call `/path/to/securedata.py edit {filepath or shortcut}`
+
 ### mail
 
 - It is NEVER a good idea to store your password in plaintext; for this reason, I strongly recommend a "throwaway" account that is only used for sending emails
@@ -91,29 +96,52 @@ print(securedata.getItem("employee", "Tyler", "salary")) # given example setting
 > 7.25
 ```
 
+### `editFile`
+
+```
+from securedata import securedata
+
+# if setItem("path", "edit", "shopping", "/path/to/shopping.md") has been called, this will edit the file
+# assigned to that shortcut.
+
+# opens file in Vim, saves upon exit
+securedata.editFile("shopping")
+
+# or you can edit a file directly...
+securedata.editFile("/path/to/shopping.md")
+
+# set path -> edit -> sync-pull and path -> edit -> sync-push to specify commands that should be run for cloud integration.
+```
+
 ### `mail`
 
 ```
+
 from securedata import mail
 
 mail.send('Test Subject', 'Test Body')
+
 ```
 
 ### `log`
 
 ```
+
 from securedata import securedata
 
 # writes to a file named LOG_DAILY YYYY-MM-DD in the default log folder (or securedata.getItem('path', 'log')) inside a YYYY-MM-DD folder
+
 securedata.log("Dear Diary...")
 securedata.log("This function hit a breakpoint", level="debug")
 securedata.log("Looks like the server is on fire", level="critical")
 securedata.log("This is fine", level="info")
 
 # writes to a file named LOG_TEMPERATURE
+
 securedata.log("30", logName="LOG_TEMPERATURE")
 
 # writes to a file named LOG_TEMPERATURE in /home/pi/weather
+
 securedata.log("30", logName="LOG_TEMPERATURE", filePath="/home/pi/weather")
 
     # format
@@ -132,3 +160,7 @@ securedata.log("30", logName="LOG_TEMPERATURE", filePath="/home/pi/weather")
 
 - Although I've done quite a bit of testing, I can't guarantee everything that works on my machine will work on yours. Always back up your data to multiple places to avoid data loss.
 - If you find any issues, please contact me... or get your hands dirty and raise a PR!
+
+```
+
+```

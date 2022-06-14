@@ -75,7 +75,39 @@ def main():
     initialized = True
 
 
-def getItem(*attribute):
+"""
+Edit and save a file using Vim
+Allows for shortcuts by setting paths in settings.json -> path -> edit
+settings.json -> path -> edit -> sync is reserved for the command to be run to sync files
+"""
+
+
+def editFile(path):
+
+    pull_command = getItem("path", "edit", "sync-pull")
+    if pull_command:
+        print(f"Pulling {path} from cloud...")
+        os.system(pull_command)
+        print("Pulled.")
+
+    # allows for shortcuts by setting paths in settings.json -> path -> edit
+    if path in getItem("path", "edit"):
+        path = getItem("path", "edit", path)
+
+    if not os.path.exists(path):
+        print(f"File does not exist: {path}")
+        exit(-1)
+
+    os.system(f"vim {path}")
+
+    push_command = getItem("path", "edit", "sync-push")
+    if push_command:
+        print(f"Saving {path} to cloud...")
+        os.system(push_command)
+        print("Saved.")
+
+
+def getItem(*attribute, warn=False):
     """
     Returns a property in settings.json.
     Usage: get('person', 'name')
@@ -90,9 +122,11 @@ def getItem(*attribute):
     for index, item in enumerate(attribute):
         if item in _settings:
             _settings = _settings[item]
-        else:
+        elif attribute[1] != "edit":
             print(
                 f"Warning: {item} not found in {_settings if index > 0 else f'{PATH_SECUREDATA}/settings.json'}")
+            return None
+        else:
             return None
 
     return _settings
@@ -348,3 +382,6 @@ if __name__ == "__main__":
 if argv[-1] == 'config':
     setConfigItem('path_securedata', input(
         f"Enter the full path of where you want to store all data (currently {PATH_SECUREDATA}/settings.json):\n"))
+
+if argv[1] == 'edit':
+    editFile(argv[2])
