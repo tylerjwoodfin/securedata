@@ -82,17 +82,22 @@ settings.json -> path -> edit -> sync is reserved for the command to be run to s
 """
 
 
-def editFile(path):
-
-    pull_command = getItem("path", "edit", "sync-pull")
-    if pull_command:
-        print(f"Pulling {path} from cloud...")
-        os.system(pull_command)
-        print("Pulled.")
-
+def editFile(path, sync=False):
     # allows for shortcuts by setting paths in settings.json -> path -> edit
     if path in getItem("path", "edit"):
-        path = getItem("path", "edit", path)
+        item = getItem("path", "edit", path)
+        if type(item) != dict or "value" not in item.keys():
+            log(
+                f"Could not use shortcut for {path} in getItem(path -> edit); should be a JSON object with value, sync attributes", level="warn")
+        else:
+            path = item["value"]
+            sync = ("sync" in item.keys() and item["sync"]) or False
+
+            pull_command = getItem("path", "edit", "sync-pull")
+            if pull_command and sync:
+                print(f"Pulling {path} from cloud...")
+                os.system(pull_command)
+                print("Pulled.")
 
     if not os.path.exists(path):
         print(f"File does not exist: {path}")
@@ -101,7 +106,7 @@ def editFile(path):
     os.system(f"vim {path}")
 
     push_command = getItem("path", "edit", "sync-push")
-    if push_command:
+    if push_command and sync:
         print(f"Saving {path} to cloud...")
         os.system(push_command)
         print("Saved.")
@@ -383,5 +388,8 @@ if argv[-1] == 'config':
     setConfigItem('path_securedata', input(
         f"Enter the full path of where you want to store all data (currently {PATH_SECUREDATA}/settings.json):\n"))
 
-if len(argv) > 2 and argv[1] == 'edit':
-    editFile(argv[2])
+if len(argv) > 1 and argv[1] == 'edit':
+    if(len(argv) > 2):
+        editFile(argv[2])
+    else:
+        editFile(f"{PATH_SECUREDATA}/settings.json")
