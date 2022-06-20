@@ -388,7 +388,7 @@ if argv[-1] == 'config':
     setConfigItem('path_securedata', input(
         f"Enter the full path of where you want to store all data (currently {PATH_SECUREDATA}/settings.json):\n"))
 
-if len(argv) > 1 and argv[1] == 'edit':
+if "securedata" in argv[0] and len(argv) > 1 and argv[1] == 'edit':
     if(len(argv) > 2):
         editFile(argv[2])
     else:
