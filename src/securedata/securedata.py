@@ -143,7 +143,7 @@ def getItem(*attribute, warn=False):
     for index, item in enumerate(attribute):
         if item in _settings:
             _settings = _settings[item]
-        elif attribute[1] != "edit":
+        elif len(attribute) < 2 or attribute[1] != "edit":
             print(
                 f"Warning: {item} not found in {_settings if index > 0 else f'{PATH_SECUREDATA}/settings.json'}")
             return None
