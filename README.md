@@ -11,7 +11,7 @@ A library that allows for easy reading/writing of settings across repositories, 
 ## Features
 
 - Get/Set data within a JSON file in the location of your choice
-- Using rclone, automatically sync to/from directories as needed
+- Sync with cloud providers using custom commands
 - Log to a file/directory of your choice without having to configure `logger` each time
 - Send/receive mail
 
@@ -26,10 +26,59 @@ A library that allows for easy reading/writing of settings across repositories, 
   python3 -m pip install securedata
 ```
 
+## Configuration
+
+- To choose where `settings.json` is stored, use `securedata config`
+
+- To choose where logs will be stored, edit `settings.json` and set `path -> log` to the full path to the log folder. (in other words, `{"path": "log": "/path/to/folder"}`)
+
+### cloud syncing
+
+- Set `settings.json -> path -> securedata -> {sync-pull/sync-push}`, like this example:
+
+```
+# example only; these commands will be unique to your cloud syncing setup
+
+# if set, pull commands will be used before loading `settings.json`; push commands will be used after `setItem`
+
+{
+  "path": {
+    "securedata": {
+      "sync-pull": "rclone sync Dropbox:SecureData /home/pi/securedata",
+      "sync-push": "rclone copy /home/pi/securedata Dropbox:SecureData"
+    }
+  }
+}
+```
+
 ### editFile
 
-- see example below
-- You can also call `/path/to/securedata.py edit {filepath or shortcut}`
+- see example below to enable something like `securedata edit shopping` from the terminal
+  - or `securedata.editFile("shopping")`, rather than `securedata.editFile("/home/pi/path/to/shopping.md")`
+- if sync-push and set-pull are set, pull commands will be used before loading the file; push commands will be used after saving
+- each shortcut should have a `value` (full path to the file)
+  - to enable syncing, each shortcut should also have `sync` set to `true`
+
+```
+# example only; these commands will be unique to your cloud syncing setup
+
+{
+  "path": {
+    "edit": {
+      "shopping": {
+        "value": "/home/pi/path/to/shopping.md",
+        "sync": true
+      },
+      "todo": {
+        "value": "/home/pi/path/to/todo.md",
+        "sync": false
+      }
+      "sync-pull": "rclone sync Dropbox:SecureData /home/pi/securedata",
+      "sync-push": "rclone copy /home/pi/securedata Dropbox:SecureData"
+    }
+  }
+}
+```
 
 ### mail
 
@@ -50,16 +99,6 @@ A library that allows for easy reading/writing of settings across repositories, 
     }
 }
 ```
-
-### Configuration
-
-- To choose where `settings.json` is stored, use
-
-```
-securedata config
-```
-
-- To choose where logs will be stored, edit `settings.json` and set `path -> log` to the full path to the log folder. (in other words, `{"path": "log": "/path/to/folder"})
 
 ## Examples
 
@@ -152,9 +191,7 @@ securedata.log("30", logName="LOG_TEMPERATURE", filePath="/home/pi/weather")
 ## Dependencies
 
 - Python >= 3.6
-- [Rclone](https://rclone.org)
-  - optional, used to sync data to/from cloud providers
-  - support for customizing this with `securedata.config` in a future update
+- smtplib
 
 ## Disclaimers
 

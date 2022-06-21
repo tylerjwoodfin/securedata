@@ -13,6 +13,8 @@ def main():
     global PATH_LOG
     global PATH_CONFIG_FILE
     global SETTINGS
+    global PULL_COMMAND
+    global PUSH_COMMAND
     global initialized
     SETTINGS = None
 
@@ -26,11 +28,11 @@ def main():
     PATH_SECUREDATA = os.path.expanduser(
         getConfigItem('path_securedata') or '~/securedata')
 
-    # initialize settings file if it doesn't exist
     try:
         with open(f'{PATH_SECUREDATA}/settings.json', 'r+') as f:
             f.seek(0, os.SEEK_END)
     except:
+        # initialize settings file if it doesn't exist
         if not os.path.exists(PATH_SECUREDATA):
             os.makedirs(PATH_SECUREDATA)
         with open(f'{PATH_SECUREDATA}/settings.json', 'x+') as f:
@@ -41,9 +43,23 @@ def main():
 
     try:
         SETTINGS = json.load(open(f'{PATH_SECUREDATA}/settings.json'))
+        _sync = getItem("path", "securedata")
+        _sync_keys = _sync.keys()
+
+        PULL_COMMAND = ''
+        PUSH_COMMAND = ''
+        if 'sync-pullx' in _sync_keys and 'sync-push' in _sync_keys:
+            PULL_COMMAND = _sync['sync-pull']
+            PUSH_COMMAND = _sync['sync-push']
+
+        if PULL_COMMAND:
+            print(f"Pulling {PATH_SECUREDATA}/settings.json from cloud...")
+            os.system(PULL_COMMAND)
+            print("Pulled.")
+            SETTINGS = json.load(open(f'{PATH_SECUREDATA}/settings.json'))
     except json.decoder.JSONDecodeError as e:
         response = input(
-            f"The settings file ({PATH_SECUREDATA}/settings.json) is not valid JSON. Do you want to replace it with an empty JSON file? (you will lose existing data) (y/n)\n")
+            f"The settings file ({PATH_SECUREDATA}/settings.json) is not valid JSON. Do you want to replace it with an empty JSON file? (The existing file will be backed up in {PATH_SECUREDATA}) (y/n)\n")
         if(response.lower().startswith("y")):
             print("Backing up...")
 
@@ -101,7 +117,7 @@ def editFile(path, sync=False):
 
     if not os.path.exists(path):
         print(f"File does not exist: {path}")
-        exit(-1)
+        return -1
 
     os.system(f"vim {path}")
 
@@ -171,6 +187,11 @@ def setItem(*attribute, value=None, fileName='settings.json'):
 
     with open(secureFullPath, 'w+') as file:
         json.dump(_settings, file, indent=4)
+
+    if PUSH_COMMAND:
+        print(f"Pushing {PATH_SECUREDATA}/settings.json to cloud...")
+        os.system(PUSH_COMMAND)
+        print("Saved.")
 
     return value
 
