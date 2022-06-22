@@ -48,7 +48,7 @@ def main():
 
         PULL_COMMAND = ''
         PUSH_COMMAND = ''
-        if 'sync-pullx' in _sync_keys and 'sync-push' in _sync_keys:
+        if 'sync-pull' in _sync_keys and 'sync-push' in _sync_keys:
             PULL_COMMAND = _sync['sync-pull']
             PUSH_COMMAND = _sync['sync-push']
 
