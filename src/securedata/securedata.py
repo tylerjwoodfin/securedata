@@ -43,24 +43,10 @@ def main():
 
     try:
         SETTINGS = json.load(open(f'{PATH_SECUREDATA}/settings.json'))
-        _sync = getItem("path", "securedata")
-        _sync_keys = _sync.keys()
-
-        PULL_COMMAND = ''
-        PUSH_COMMAND = ''
-        if 'sync-pull' in _sync_keys and 'sync-push' in _sync_keys:
-            PULL_COMMAND = _sync['sync-pull']
-            PUSH_COMMAND = _sync['sync-push']
-
-        if PULL_COMMAND:
-            print(f"Pulling {PATH_SECUREDATA}/settings.json from cloud...")
-            os.system(PULL_COMMAND)
-            print("Pulled.")
-            SETTINGS = json.load(open(f'{PATH_SECUREDATA}/settings.json'))
     except json.decoder.JSONDecodeError as e:
         response = input(
             f"The settings file ({PATH_SECUREDATA}/settings.json) is not valid JSON. Do you want to replace it with an empty JSON file? (The existing file will be backed up in {PATH_SECUREDATA}) (y/n)\n")
-        if(response.lower().startswith("y")):
+        if response.lower().startswith("y"):
             print("Backing up...")
 
             # for some reason, this only works when you call touch; TODO fix this
@@ -89,6 +75,26 @@ def main():
         PATH_LOG += '/'
 
     initialized = True
+
+
+"""
+Pull from the cloud using the command of your choice.
+"""
+
+
+def pull():
+    _sync = getItem("path", "securedata")
+    _sync_keys = _sync.keys()
+
+    PULL_COMMAND = ''
+    if 'sync-pull' in _sync_keys and 'sync-push' in _sync_keys:
+        PULL_COMMAND = _sync['sync-pull']
+
+    if PULL_COMMAND:
+        print(f"Pulling {PATH_SECUREDATA}/settings.json from cloud...")
+        os.system(PULL_COMMAND)
+        print("Pulled.")
+        SETTINGS = json.load(open(f'{PATH_SECUREDATA}/settings.json'))
 
 
 """
@@ -128,13 +134,19 @@ def editFile(path, sync=False):
         print("Saved.")
 
 
-def getItem(*attribute, warn=False):
-    """
-    Returns a property in settings.json.
-    Usage: get('person', 'name')
-    """
+"""
+Returns a property in settings.json.
+Usage: get('person', 'name')
+"""
+
+
+def getItem(*attribute, warn=False, sync=False):
+
+    if sync:
+        pull()
 
     global SETTINGS
+
     if SETTINGS == None:
         return None
 
@@ -153,18 +165,23 @@ def getItem(*attribute, warn=False):
     return _settings
 
 
-def setItem(*attribute, value=None, fileName='settings.json'):
-    """
-    Sets a property in settings.json (or some other `fileName`).
-    Usage: set('person', 'name', 'Tyler')
-    The last argument is the value to set, unless value is specified.
-    Returns the value set.
-    """
+"""
+Sets a property in settings.json (or some other `fileName`).
+Usage: set('person', 'name', 'Tyler')
+The last argument is the value to set, unless value is specified.
+Returns the value set.
+"""
+
+
+def setItem(*attribute, value=None, fileName='settings.json', sync=False):
 
     global SETTINGS
     secureFullPath = f"{PATH_SECUREDATA}/{fileName}"
 
-    if(not value):
+    if sync:
+        pull()
+
+    if not value:
         value = attribute[-1]
 
     _settings = SETTINGS if fileName == 'settings.json' else json.load(
@@ -180,7 +197,7 @@ def setItem(*attribute, value=None, fileName='settings.json'):
             print(
                 f"Warning: Adding new key '{item}' to {partition if index > 0 else secureFullPath}")
         else:
-            if(index == len(attribute) - 2):
+            if index == len(attribute) - 2:
                 partition[item] = value
             else:
                 partition = partition[item]
@@ -188,9 +205,10 @@ def setItem(*attribute, value=None, fileName='settings.json'):
     with open(secureFullPath, 'w+') as file:
         json.dump(_settings, file, indent=4)
 
-    if PUSH_COMMAND:
+    push_command = getItem("path", "securedata", "sync-push")
+    if push_command and sync:
         print(f"Pushing {PATH_SECUREDATA}/settings.json to cloud...")
-        os.system(PUSH_COMMAND)
+        os.system(push_command)
         print("Saved.")
 
     return value
@@ -202,12 +220,12 @@ def getFileAsArray(item, filePath=None, strip=True):
     """
 
     global PATH_LOG
-    if(filePath == None):
+    if filePath == None:
         filePath = PATH_LOG
-    elif(filePath == "notes"):
+    elif filePath == "notes":
         filePath = getItem('path', 'notes', 'local')
 
-        if(not filePath[-1] == '/'):
+        if not filePath[-1] == '/':
             filePath += '/'
 
         # pull from cloud
@@ -278,7 +296,7 @@ def getConfigItem(key=None):
     except json.decoder.JSONDecodeError as e:
         response = input(
             f"The config file ({PATH_CONFIG_FILE}) is not valid JSON. Do you want to replace it with an empty JSON file?  (you will lose existing data) (y/n)\n")
-        if(response.lower().startswith("y")):
+        if response.lower().startswith("y"):
             with open(PATH_CONFIG_FILE, 'w+') as f:
                 f.write('{}')
             print("Done. Please try your last command again.")
@@ -301,15 +319,15 @@ def setConfigItem(key=None, value=None):
     else:
 
         # error correction
-        if(key == 'path_securedata' and value[0] != '/' and value[0] != '~'):
+        if key == 'path_securedata' and value[0] != '/' and value[0] != '~':
             value = f"/{value}"
-        if(key == 'path_securedata' and value[-1] == '/'):
+        if key == 'path_securedata' and value[-1] == '/':
             value = f"{value[:-1]}"
 
         # warn about potential problems
-        if(not os.path.exists(os.path.expanduser(value))):
+        if not os.path.exists(os.path.expanduser(value)):
             print(f"Warning: {value} is not a valid path.")
-        if(value[0] == '~'):
+        if value[0] == '~':
             print("Warning: using tilde expansions may cause problems if using securedata for multiple users. It is recommended to use full paths.")
 
     try:
@@ -410,7 +428,7 @@ if argv[-1] == 'config':
         f"Enter the full path of where you want to store all data (currently {PATH_SECUREDATA}/settings.json):\n"))
 
 if "securedata" in argv[0] and len(argv) > 1 and argv[1] == 'edit':
-    if(len(argv) > 2):
+    if len(argv) > 2:
         editFile(argv[2])
     else:
         editFile(f"{PATH_SECUREDATA}/settings.json")

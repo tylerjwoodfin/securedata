@@ -39,7 +39,7 @@ A library that allows for easy reading/writing of settings across repositories, 
 ```
 # example only; these commands will be unique to your cloud syncing setup
 
-# if set, pull commands will be used before loading `settings.json`; push commands will be used after `setItem`
+# if set, pull commands will be used before loading `settings.json` if `sync` is True; pull and push commands will be used before and after `setItem` if `sync` is True
 
 {
   "path": {
@@ -49,6 +49,11 @@ A library that allows for easy reading/writing of settings across repositories, 
     }
   }
 }
+
+setItem("test", "123") # will not sync, because `sync` is not true
+setItem("test", "123", sync=True) # will sync if the properties above are set
+getItem("test") # will not pull from cloud before returning, because `sync` is not true
+getItem("test", sync=True) # will pull from cloud before returning
 ```
 
 ### editFile
