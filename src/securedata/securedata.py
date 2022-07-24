@@ -256,7 +256,7 @@ def writeFile(fileName, filePath=None, content=None, append=False):
     _filePath = filePath
 
     if filePath == None:
-        filePath = PATH_LOG
+        filePath = PATH_LOG[0:-1] if PATH_LOG.endswith("/") else PATH_LOG
     elif filePath == "notes":
         filePath = getItem('path', 'notes', 'local')
 
