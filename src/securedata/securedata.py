@@ -214,7 +214,7 @@ def setItem(*attribute, value=None, fileName='settings.json', sync=False):
     return value
 
 
-def getFileAsArray(item, filePath=None, strip=True):
+def getFileAsArray(item, filePath=None, strip=True, ignoreNotFound=False):
     """
     Returns the file as an array; strips using strip() unless strip is set to False
     """
@@ -243,7 +243,8 @@ def getFileAsArray(item, filePath=None, strip=True):
 
         return content.split('\n')
     except Exception as e:
-        log(f"getFileAsArray: {e}", level="error")
+        if not ignoreNotFound or e.__class__ != FileNotFoundError:
+            log(f"getFileAsArray: {e}", level="error")
         return ""
 
 
